@@ -1,0 +1,18 @@
+
+import pandas as pd, sqlite3, sys
+
+df=pd.read_csv('data/sales_data.csv')
+if df['order_id'].isnull().any(): sys.exit('FAILED: Null order_id found')
+if (df['quantity']<=0).any(): sys.exit('FAILED: Quantity must be > 0')
+if (df['unit_price']<=0).any(): sys.exit('FAILED: Unit price must be > 0')
+if df['order_id'].duplicated().any(): sys.exit('FAILED: Duplicate order_id found')
+
+conn=sqlite3.connect('warehouse.db')
+dim=df[['product','category']].drop_duplicates().reset_index(drop=True)
+dim['product_key']=dim.index+1
+fact=df.merge(dim,on=['product','category'])
+fact['total_amount']=fact['quantity']*fact['unit_price']
+fact=fact[['order_id','product_key','quantity','unit_price','total_amount']]
+dim.to_sql('dim_product',conn,if_exists='replace',index=False)
+fact.to_sql('fact_sales',conn,if_exists='replace',index=False)
+print('Pipeline completed successfully')
