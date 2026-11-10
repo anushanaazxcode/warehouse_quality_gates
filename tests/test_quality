@@ -1,0 +1,8 @@
+import pandas as pd
+
+df=pd.read_csv('data/sales_data.csv')
+assert len(df)>0
+assert df['order_id'].notnull().all()
+assert df['order_id'].is_unique
+assert (df['quantity']>0).all()
+assert (df['unit_price']>0).all()
